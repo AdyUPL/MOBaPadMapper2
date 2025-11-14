@@ -15,12 +15,14 @@
         <!-- Informacja o aktualnym profilu -->
         <StackLayout>
             <Label Text="Aktywny profil:"
-                   TextColor="White" />
+           TextColor="LightGray" />
             <Label x:Name="ActiveProfileLabel"
-                   Text="Domyślny profil"
-                   TextColor="Orange"
-                   FontAttributes="Bold"
-                   FontSize="18" />
+           FontAttributes="Bold"
+           TextColor="White" />
+
+            <Picker x:Name="ProfilesPicker"
+            Title="Wybierz profil"
+            SelectedIndexChanged="OnProfileChanged" />
         </StackLayout>
 
         <!-- (na razie bez wyboru profilu, tylko info) -->

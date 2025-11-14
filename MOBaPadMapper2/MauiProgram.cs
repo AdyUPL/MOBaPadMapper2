@@ -28,6 +28,9 @@ public static class MauiProgram
 
         // Strony
         builder.Services.AddSingleton<MainPage>();
+        builder.Services.AddSingleton<MobaInputMapper>();
+        builder.Services.AddSingleton<ProfilesRepository>();
+
 
 #if DEBUG
         builder.Logging.AddDebug();

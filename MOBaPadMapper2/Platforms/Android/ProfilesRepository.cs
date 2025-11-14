@@ -1,59 +1,70 @@
-﻿using System.Collections.Generic;
+﻿namespace MOBaPadMapper2;
 
-namespace MOBaPadMapper2;
-
-public static class ProfilesRepository
+public class ProfilesRepository
 {
-    public static List<GameProfile> LoadProfiles()
+    private readonly List<GameProfile> _profiles = new();
+
+    public ProfilesRepository()
     {
-        // Na razie statycznie – możesz potem rozbudować o zapis do Preferences.
-        var profiles = new List<GameProfile>();
-
-        var domyslny = new GameProfile
+        // Domyślny profil – możesz później go edytować
+        var defaultProfile = new GameProfile
         {
-            Name = "Domyślny profil"
+            Name = "Domyślny MOBA"
         };
-        domyslny.Mappings.Add(new ActionMapping
+
+        defaultProfile.Mappings.AddRange(new[]
         {
-            TriggerButton = GamepadButton.A,
-            ActionType = ActionType.Tap,
-            TargetX = 0.5,
-            TargetY = 0.8,
-            Size = 60
-        });
-        domyslny.Mappings.Add(new ActionMapping
-        {
-            TriggerButton = GamepadButton.B,
-            ActionType = ActionType.Tap,
-            TargetX = 0.8,
-            TargetY = 0.8,
-            Size = 60
+            new ActionMapping
+            {
+                TriggerButton = GamepadButton.A,
+                ActionType = ActionType.Tap,
+                TargetX = 0.7,
+                TargetY = 0.8,
+                Size = 60
+            },
+            new ActionMapping
+            {
+                TriggerButton = GamepadButton.B,
+                ActionType = ActionType.Tap,
+                TargetX = 0.85,
+                TargetY = 0.8,
+                Size = 60
+            },
+            new ActionMapping
+            {
+                TriggerButton = GamepadButton.X,
+                ActionType = ActionType.Tap,
+                TargetX = 0.55,
+                TargetY = 0.8,
+                Size = 60
+            },
+            new ActionMapping
+            {
+                TriggerButton = GamepadButton.Y,
+                ActionType = ActionType.HoldAndAim,
+                TargetX = 0.7,
+                TargetY = 0.6,
+                UseRightStickForDirection = true,
+                Size = 60
+            }
         });
 
-        var moba = new GameProfile
-        {
-            Name = "Profil MOBA"
-        };
-        moba.Mappings.Add(new ActionMapping
-        {
-            TriggerButton = GamepadButton.X,
-            ActionType = ActionType.Tap,
-            TargetX = 0.3,
-            TargetY = 0.8,
-            Size = 60
-        });
-        moba.Mappings.Add(new ActionMapping
-        {
-            TriggerButton = GamepadButton.Y,
-            ActionType = ActionType.HoldAndAim,
-            TargetX = 0.7,
-            TargetY = 0.5,
-            Size = 60
-        });
+        _profiles.Add(defaultProfile);
+    }
 
-        profiles.Add(domyslny);
-        profiles.Add(moba);
+    public IList<GameProfile> GetAllProfiles() => _profiles;
 
-        return profiles;
+    public GameProfile GetDefaultProfile() => _profiles.First();
+
+    public void SaveProfile(GameProfile profile)
+    {
+        // Na razie w pamięci – później zapiszemy do pliku/Preferences
+        var existing = _profiles.FirstOrDefault(p => p.Name == profile.Name);
+        if (existing == null)
+            _profiles.Add(profile);
+        else
+        {
+            existing.Mappings = profile.Mappings;
+        }
     }
 }
