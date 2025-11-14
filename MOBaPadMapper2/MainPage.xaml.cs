@@ -1,5 +1,5 @@
 ﻿using Microsoft.Maui.Devices;
-using System.Collections.Generic;
+using System;
 
 namespace MOBaPadMapper2
 {
@@ -8,9 +8,6 @@ namespace MOBaPadMapper2
         private readonly IGamepadInputService _gamepad;
         private readonly MobaInputMapper _mapper;
 
-        private List<GameProfile> _profiles = new();
-        private GameProfile? _currentProfile;
-
         public MainPage(IGamepadInputService gamepad, MobaInputMapper mapper)
         {
             InitializeComponent();
@@ -18,45 +15,18 @@ namespace MOBaPadMapper2
             _gamepad = gamepad;
             _mapper = mapper;
 
-            _profiles = ProfilesRepository.LoadProfiles();
-
-            ProfilePicker.ItemsSource = _profiles;
-            ProfilePicker.ItemDisplayBinding = new Binding(nameof(GameProfile.Name));
-
-            if (_profiles.Count > 0)
-            {
-                ProfilePicker.SelectedIndex = 0;
-                SetCurrentProfile(_profiles[0]);
-            }
+            // Na start – jeden domyślny profil
+            ActiveProfileLabel.Text = "Domyślny profil";
 
             _gamepad.GamepadUpdated += OnGamepadUpdated;
         }
 
-        private void SetCurrentProfile(GameProfile profile)
-        {
-            _currentProfile = profile;
-            ActiveProfileLabel.Text = profile.Name;
-            _mapper.UpdateMappings(profile.Mappings);
-        }
-
-        private void ProfilePicker_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (ProfilePicker.SelectedItem is GameProfile profile)
-            {
-                SetCurrentProfile(profile);
-            }
-        }
-
         private async void ConfigureButton_Clicked(object sender, EventArgs e)
         {
-            if (_currentProfile == null)
-                return;
-
-            await Shell.Current.GoToAsync(nameof(TestPage),
-                new Dictionary<string, object>
-                {
-                    ["profile"] = _currentProfile
-                });
+            // TODO: tutaj później nawigacja do ekranu konfiguracji (TestPage)
+            await DisplayAlert("Konfiguracja",
+                "Ekran konfiguracji przycisków dodamy w kolejnym kroku.",
+                "OK");
         }
 
         protected override void OnDisappearing()
@@ -67,8 +37,8 @@ namespace MOBaPadMapper2
 
         private async void OnGamepadUpdated(object? sender, GamepadState state)
         {
-            double width = this.Width;
-            double height = this.Height;
+            double width = Width;
+            double height = Height;
 
             if (width <= 0 || height <= 0)
             {

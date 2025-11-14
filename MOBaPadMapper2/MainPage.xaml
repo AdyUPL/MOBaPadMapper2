@@ -4,9 +4,7 @@
              x:Class="MOBaPadMapper2.MainPage"
              BackgroundColor="#111111">
 
-    <VerticalStackLayout
-        Padding="20"
-        Spacing="20">
+    <VerticalStackLayout Padding="20" Spacing="20">
 
         <Label Text="MobaPad Mapper"
                FontSize="26"
@@ -14,32 +12,26 @@
                HorizontalOptions="Center"
                TextColor="White" />
 
-        <!-- Wybór profilu -->
-        <StackLayout>
-            <Label Text="Profil mapowania:"
-                   TextColor="White"
-                   FontAttributes="Bold" />
-            <Picker x:Name="ProfilePicker"
-                    SelectedIndexChanged="ProfilePicker_SelectedIndexChanged" />
-        </StackLayout>
-
-        <!-- Aktywny profil -->
+        <!-- Informacja o aktualnym profilu -->
         <StackLayout>
             <Label Text="Aktywny profil:"
                    TextColor="White" />
             <Label x:Name="ActiveProfileLabel"
-                   Text="-"
+                   Text="Domyślny profil"
                    TextColor="Orange"
                    FontAttributes="Bold"
                    FontSize="18" />
         </StackLayout>
 
+        <!-- (na razie bez wyboru profilu, tylko info) -->
+
         <!-- Przycisk konfiguracji -->
         <Button Text="Konfiguracja przycisków"
                 Clicked="ConfigureButton_Clicked" />
 
-        <Label Text="Podłącz gamepad i używaj go w grze z aktualnym profilem."
+        <Label Text="Podłącz gamepad i używaj przycisków wg aktualnego profilu."
                TextColor="LightGray"
                FontSize="12" />
+
     </VerticalStackLayout>
 </ContentPage>

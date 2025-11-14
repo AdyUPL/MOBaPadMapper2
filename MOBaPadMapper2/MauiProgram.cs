@@ -22,7 +22,6 @@ namespace MOBaPadMapper2
 
             // STRONY
             builder.Services.AddSingleton<MainPage>();
-            builder.Services.AddTransient<TestPage>();
 
 #if DEBUG
             builder.Logging.AddDebug();
