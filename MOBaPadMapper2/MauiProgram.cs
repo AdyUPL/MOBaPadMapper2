@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using MOBaPadMapper2;
-
 
 namespace MOBaPadMapper2
 {

@@ -20,4 +20,7 @@ public class ActionMapping
     public double TargetY2 { get; set; }
 
     public bool UseRightStickForDirection { get; set; }
+
+    // NOWE: rozmiar „klocka” na ekranie konfiguracyjnym
+    public double Size { get; set; } = 60;
 }

@@ -2,146 +2,47 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MOBaPadMapper2.MainPage"
-             Title="MobaPad Mapper">
+             Title="Gry">
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="20">
 
-            <!-- Tytuł -->
-            <Label Text="MobaPad Mapper"
-                   FontSize="28"
-                   HorizontalOptions="Center"
-                   HorizontalTextAlignment="Center"
-                   FontAttributes="Bold" />
+            <Label Text="MobaPad – Gry"
+                   FontAttributes="Bold"
+                   FontSize="22" />
 
-            <!-- STATUS GAMEPADA -->
-            <Frame BorderColor="Gray" CornerRadius="12" Padding="12">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Status gamepada"
-                           FontAttributes="Bold"
-                           FontSize="18" />
-
-                    <Label x:Name="ButtonsStateLabel"
-                           Text="Przyciski: (czeka na sygnał)"
-                           FontSize="14" />
-
-                    <Label x:Name="LeftStickLabel"
-                           Text="Left Stick: (czeka na sygnał)" />
-
-                    <Label x:Name="RightStickLabel"
-                           Text="Right Stick: (czeka na sygnał)" />
-                </VerticalStackLayout>
-            </Frame>
-
-            <!-- TEST DOTYKU -->
-            <Frame BorderColor="Gray" CornerRadius="12" Padding="12">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Test dotyku"
-                           FontAttributes="Bold"
-                           FontSize="18" />
-
-                    <Label Text="Upewnij się, że usługa dostępności (Accessibility) jest włączona dla tej aplikacji."
-                           FontSize="13"
-                           TextColor="DarkGray" />
-
-                    <Button Text="Test Tap (środek ekranu)"
-                            Clicked="OnTestTapClicked" />
-
-                    <Button Text="Test Swipe (w prawo)"
-                            Clicked="OnTestSwipeClicked" />
-                </VerticalStackLayout>
-            </Frame>
-
-            <!-- KONFIGURACJA MAPOWAŃ -->
-            <Frame BorderColor="Gray" CornerRadius="12" Padding="12">
+            <Frame Padding="10" HasShadow="True">
                 <VerticalStackLayout Spacing="10">
 
-                    <Label Text="Konfiguracja mapowań"
+                    <Label Text="Gra"
+                           FontAttributes="Bold" />
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Picker x:Name="GamePicker"
+                                Title="Wybierz grę"
+                                WidthRequest="220"
+                                SelectedIndexChanged="GamePicker_SelectedIndexChanged" />
+                        <Button Text="Nowa gra"
+                                Clicked="OnAddGameClicked" />
+                    </HorizontalStackLayout>
+
+                    <Label Text="Kontroler"
                            FontAttributes="Bold"
-                           FontSize="18" />
+                           Margin="0,10,0,0" />
 
-                    <!-- PRZYCISK A: TAP -->
-                    <VerticalStackLayout Spacing="6">
-                        <Label Text="Przycisk A → Tap"
-                               FontAttributes="Bold" />
+                    <Label x:Name="ControllerNameLabel"
+                           Text="Brak podłączonego kontrolera"
+                           FontSize="14" />
 
-                        <Label Text="Pozycja dotyku jako % szerokości i wysokości ekranu."
-                               FontSize="13"
-                               TextColor="DarkGray" />
-
-                        <Label x:Name="AConfigLabel"
-                               Text="Pozycja: X=50% Y=50%" />
-
-                        <Label Text="X (%)" FontSize="12" />
-                        <Slider x:Name="ASliderX"
-                                Minimum="0"
-                                Maximum="100"
-                                Value="50"
-                                ValueChanged="OnAConfigSliderValueChanged" />
-
-                        <Label Text="Y (%)" FontSize="12" />
-                        <Slider x:Name="ASliderY"
-                                Minimum="0"
-                                Maximum="100"
-                                Value="50"
-                                ValueChanged="OnAConfigSliderValueChanged" />
-
-                        <HorizontalStackLayout Spacing="10">
-                            <Button Text="Zastosuj A"
-                                    Clicked="OnApplyAConfigClicked" />
-                            <Button Text="Domyślne A"
-                                    Clicked="OnResetAConfigClicked" />
-                        </HorizontalStackLayout>
-                    </VerticalStackLayout>
-
-                    <BoxView HeightRequest="1"
-                             BackgroundColor="LightGray"
-                             Margin="0,10,0,10" />
-
-                    <!-- PRZYCISK RB: HOLD + AIM -->
-                    <VerticalStackLayout Spacing="6">
-                        <Label Text="Przycisk RB → Hold + Aim"
-                               FontAttributes="Bold" />
-
-                        <Label Text="Przytrzymaj RB, puść, a zostanie wykonany swipe w kierunku prawej gałki."
-                               FontSize="13"
-                               TextColor="DarkGray" />
-
-                        <Label x:Name="RBConfigLabel"
-                               Text="Pozycja: X=80% Y=80%" />
-
-                        <Label Text="X (%)" FontSize="12" />
-                        <Slider x:Name="RBSliderX"
-                                Minimum="0"
-                                Maximum="100"
-                                Value="80"
-                                ValueChanged="OnRBConfigSliderValueChanged" />
-
-                        <Label Text="Y (%)" FontSize="12" />
-                        <Slider x:Name="RBSliderY"
-                                Minimum="0"
-                                Maximum="100"
-                                Value="80"
-                                ValueChanged="OnRBConfigSliderValueChanged" />
-
-                        <HorizontalStackLayout Spacing="10"
-                                               VerticalOptions="Center">
-                            <Label Text="Użyj prawej gałki do kierunku"
-                                   VerticalOptions="Center" />
-                            <Switch x:Name="RBUseRightStickSwitch"
-                                    IsToggled="True" />
-                        </HorizontalStackLayout>
-
-                        <HorizontalStackLayout Spacing="10">
-                            <Button Text="Zastosuj RB"
-                                    Clicked="OnApplyRBConfigClicked" />
-                            <Button Text="Domyślne RB"
-                                    Clicked="OnResetRBConfigClicked" />
-                        </HorizontalStackLayout>
-                    </VerticalStackLayout>
                 </VerticalStackLayout>
             </Frame>
+
+            <Button x:Name="ConfigButton"
+                    Text="Konfiguruj przyciski"
+                    Clicked="OnOpenTestClicked"
+                    IsEnabled="False" />
 
         </VerticalStackLayout>
     </ScrollView>
+
 </ContentPage>

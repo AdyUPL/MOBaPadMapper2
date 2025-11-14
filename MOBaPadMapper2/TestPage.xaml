@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MOBaPadMapper2.TestPage"
+             BackgroundColor="Black"
+             Title="Ekran konfiguracyjny">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Pasek u góry -->
+        <HorizontalStackLayout Grid.Row="0"
+                               Padding="10"
+                               BackgroundColor="DimGray"
+                               Spacing="10">
+            <Label x:Name="GameNameLabel"
+                   Text="Gra: -"
+                   TextColor="White"
+                   FontAttributes="Bold" />
+            <Button Text="Dodaj przycisk"
+                    Clicked="OnAddMappingClicked" />
+        </HorizontalStackLayout>
+
+        <!-- Główna część: oba elementy w TEJ SAMEJ komórce -->
+        <Grid Grid.Row="1">
+
+            <!-- Cały ekran roboczy pod spodem -->
+            <AbsoluteLayout x:Name="TestSurface"
+                            BackgroundColor="Black" />
+
+            <!-- Panel konfiguracji NA WIERZCHU, przyklejony z prawej -->
+            <Frame x:Name="ConfigPanel"
+                   Padding="10"
+                   HasShadow="True"
+                   BackgroundColor="#222222"
+                   IsVisible="False"
+                   HorizontalOptions="End"
+                   VerticalOptions="Fill"
+                   WidthRequest="260"
+                   Margin="0,0,0,0">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Wybrany przycisk:"
+                           TextColor="White" />
+                    <Label x:Name="SelectedButtonLabel"
+                           Text="-"
+                           TextColor="White"
+                           FontAttributes="Bold" />
+
+                    <Label Text="Działanie"
+                           TextColor="White"
+                           Margin="0,8,0,0" />
+                    <Picker x:Name="ActionTypePicker"
+                            Title="Wybierz działanie" />
+
+                    <Label Text="Rozmiar przycisku"
+                           TextColor="White"
+                           Margin="0,8,0,0" />
+                    <Slider x:Name="SizeSlider"
+                            Minimum="40"
+                            Maximum="140"
+                            Value="60" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </Grid>
+    </Grid>
+</ContentPage>
