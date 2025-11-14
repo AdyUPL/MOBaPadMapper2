@@ -15,7 +15,7 @@ namespace MOBaPadMapper2
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            // SERWISY (tu musisz mieć klasy AndroidTouchInjector i GamepadInputService)
+            // SERWISY
             builder.Services.AddSingleton<ITouchInjector, AndroidTouchInjector>();
             builder.Services.AddSingleton<IGamepadInputService>(_ => GamepadInputService.Instance);
             builder.Services.AddSingleton<MobaInputMapper>();

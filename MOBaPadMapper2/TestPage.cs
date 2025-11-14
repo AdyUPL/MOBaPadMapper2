@@ -20,11 +20,18 @@ public partial class TestPage : ContentPage
     private View? _selectedView;
     private bool _isUpdatingUi;
 
-    // muszą być typy generyczne
     private readonly Dictionary<View, Rect> _dragStartBounds = new();
 
     private readonly IGamepadInputService _gamepad;
     private readonly MobaInputMapper _mapper;
+
+    // Kontrolki tworzone w kodzie
+    private Label _gameNameLabel = null!;
+    private Label _selectedButtonLabel = null!;
+    private Picker _actionTypePicker = null!;
+    private Slider _sizeSlider = null!;
+    private AbsoluteLayout _testSurface = null!;
+    private Grid _configPanel = null!;
 
     public GameProfile? Profile
     {
@@ -32,32 +39,174 @@ public partial class TestPage : ContentPage
         set
         {
             _profile = value;
-            GameNameLabel.Text = $"Gra: {_profile?.Name ?? "-"}";
+            if (_gameNameLabel != null)
+                _gameNameLabel.Text = $"Gra/profil: {_profile?.Name ?? "-"}";
             RenderButtons();
         }
     }
 
     public TestPage(IGamepadInputService gamepad, MobaInputMapper mapper)
     {
-        InitializeComponent();
-
         _gamepad = gamepad;
         _mapper = mapper;
 
-        // tu też musi być konkretny typ
-        ActionTypePicker.ItemsSource = Enum
+        BuildLayout();
+        SetupLogic();
+    }
+
+    private void BuildLayout()
+    {
+        BackgroundColor = Color.FromArgb("#111111");
+
+        _testSurface = new AbsoluteLayout
+        {
+            BackgroundColor = Color.FromArgb("#202020"),
+            Margin = new Thickness(10)
+        };
+
+        _configPanel = new Grid
+        {
+            BackgroundColor = Color.FromArgb("#181818"),
+            Padding = new Thickness(10),
+            IsVisible = false
+        };
+
+        _configPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        _configPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        _configPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        _configPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        _configPanel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        _configPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+        _gameNameLabel = new Label
+        {
+            Text = "Gra/profil: -",
+            TextColor = Colors.White,
+            FontAttributes = FontAttributes.Bold,
+            FontSize = 18,
+            Margin = new Thickness(0, 0, 0, 10)
+        };
+        Grid.SetRow(_gameNameLabel, 0);
+        _configPanel.Children.Add(_gameNameLabel);
+
+        var selectedStack = new HorizontalStackLayout
+        {
+            Spacing = 8
+        };
+        var selectedText = new Label
+        {
+            Text = "Wybrany przycisk:",
+            TextColor = Colors.White
+        };
+        _selectedButtonLabel = new Label
+        {
+            Text = "-",
+            TextColor = Colors.Orange,
+            FontAttributes = FontAttributes.Bold
+        };
+        selectedStack.Children.Add(selectedText);
+        selectedStack.Children.Add(_selectedButtonLabel);
+        Grid.SetRow(selectedStack, 1);
+        _configPanel.Children.Add(selectedStack);
+
+        var actionStack = new StackLayout
+        {
+            Margin = new Thickness(0, 10, 0, 0)
+        };
+        actionStack.Children.Add(new Label
+        {
+            Text = "Typ akcji",
+            TextColor = Colors.White
+        });
+        _actionTypePicker = new Picker
+        {
+            Title = "Wybierz akcję"
+        };
+        actionStack.Children.Add(_actionTypePicker);
+        Grid.SetRow(actionStack, 2);
+        _configPanel.Children.Add(actionStack);
+
+        var sizeStack = new StackLayout
+        {
+            Margin = new Thickness(0, 10, 0, 0)
+        };
+        sizeStack.Children.Add(new Label
+        {
+            Text = "Rozmiar przycisku",
+            TextColor = Colors.White
+        });
+        _sizeSlider = new Slider
+        {
+            Minimum = 30,
+            Maximum = 160,
+            Value = 60
+        };
+        sizeStack.Children.Add(_sizeSlider);
+        Grid.SetRow(sizeStack, 3);
+        _configPanel.Children.Add(sizeStack);
+
+        var infoStack = new StackLayout
+        {
+            Margin = new Thickness(0, 10, 0, 0),
+            Spacing = 6
+        };
+        infoStack.Children.Add(new Label
+        {
+            Text = "Przeciągnij przyciski po lewej, aby zmienić ich pozycję.",
+            TextColor = Colors.LightGray,
+            FontSize = 12
+        });
+        infoStack.Children.Add(new Label
+        {
+            Text = "Kliknij w puste miejsce, aby odznaczyć.",
+            TextColor = Colors.LightGray,
+            FontSize = 12
+        });
+        Grid.SetRow(infoStack, 4);
+        _configPanel.Children.Add(infoStack);
+
+        var addButton = new Button
+        {
+            Text = "Dodaj mapowanie",
+            Margin = new Thickness(0, 10, 0, 0)
+        };
+        addButton.Clicked += OnAddMappingClicked;
+        Grid.SetRow(addButton, 5);
+        _configPanel.Children.Add(addButton);
+
+        var root = new Grid
+        {
+            ColumnDefinitions =
+            {
+                new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) },
+                new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) }
+            }
+        };
+
+        Grid.SetColumn(_testSurface, 0);
+        root.Children.Add(_testSurface);
+
+        Grid.SetColumn(_configPanel, 1);
+        root.Children.Add(_configPanel);
+
+        Content = root;
+    }
+
+    private void SetupLogic()
+    {
+        _actionTypePicker.ItemsSource = Enum
             .GetValues(typeof(ActionType))
             .Cast<ActionType>()
             .ToList();
 
-        ActionTypePicker.SelectedIndexChanged += ActionTypePicker_SelectedIndexChanged;
-        SizeSlider.ValueChanged += SizeSlider_ValueChanged;
+        _actionTypePicker.SelectedIndexChanged += ActionTypePicker_SelectedIndexChanged;
+        _sizeSlider.ValueChanged += SizeSlider_ValueChanged;
 
-        TestSurface.SizeChanged += (s, e) => RenderButtons();
+        _testSurface.SizeChanged += (s, e) => RenderButtons();
 
         var bgTap = new TapGestureRecognizer();
         bgTap.Tapped += OnBackgroundTapped;
-        TestSurface.GestureRecognizers.Add(bgTap);
+        _testSurface.GestureRecognizers.Add(bgTap);
     }
 
     protected override void OnAppearing()
@@ -72,7 +221,6 @@ public partial class TestPage : ContentPage
         base.OnDisappearing();
         _gamepad.GamepadUpdated -= OnGamepadUpdated;
 
-        // zapisujemy mapowania
         if (_profile != null)
         {
             _mapper.UpdateMappings(_profile.Mappings);
@@ -91,7 +239,6 @@ public partial class TestPage : ContentPage
         }
     }
 
-    // ====== REAKCJA NA GAMEPADA ======
     private void OnGamepadUpdated(object? sender, GamepadState state)
     {
         MainThread.BeginInvokeOnMainThread(() =>
@@ -108,7 +255,7 @@ public partial class TestPage : ContentPage
             if (mapping == null)
                 return;
 
-            var view = TestSurface.Children
+            var view = _testSurface.Children
                 .OfType<Label>()
                 .FirstOrDefault(l => string.Equals(l.Text, mapping.TriggerButton.ToString(), StringComparison.Ordinal));
 
@@ -119,30 +266,29 @@ public partial class TestPage : ContentPage
         });
     }
 
-    // ====== WYGLĄD PRZYCISKÓW – KOLORY JAK NA PADZIE ======
     private static Color GetButtonColor(GamepadButton button)
     {
         return button switch
         {
-            GamepadButton.A => Color.FromArgb("#0DB45E"), // zielony
-            GamepadButton.B => Color.FromArgb("#D83C3C"), // czerwony
-            GamepadButton.X => Color.FromArgb("#2563EB"), // niebieski
-            GamepadButton.Y => Color.FromArgb("#EAB308"), // żółty
+            GamepadButton.A => Color.FromArgb("#0DB45E"),
+            GamepadButton.B => Color.FromArgb("#D83C3C"),
+            GamepadButton.X => Color.FromArgb("#2563EB"),
+            GamepadButton.Y => Color.FromArgb("#EAB308"),
             _ => Colors.DimGray
         };
     }
 
     private void RenderButtons()
     {
-        if (TestSurface == null || _profile == null)
+        if (_testSurface == null || _profile == null)
             return;
 
-        if (TestSurface.Width <= 0 || TestSurface.Height <= 0)
+        if (_testSurface.Width <= 0 || _testSurface.Height <= 0)
             return;
 
         var currentSelected = _selectedMapping;
 
-        TestSurface.Children.Clear();
+        _testSurface.Children.Clear();
         _dragStartBounds.Clear();
 
         foreach (var mapping in _profile.Mappings)
@@ -172,17 +318,17 @@ public partial class TestPage : ContentPage
             tap.Tapped += (s, e) => SelectMapping(mapping, label);
             label.GestureRecognizers.Add(tap);
 
-            var x = mapping.TargetX * TestSurface.Width - size / 2.0;
-            var y = mapping.TargetY * TestSurface.Height - size / 2.0;
+            var x = mapping.TargetX * _testSurface.Width - size / 2.0;
+            var y = mapping.TargetY * _testSurface.Height - size / 2.0;
 
-            x = Math.Clamp(x, 0, TestSurface.Width - size);
-            y = Math.Clamp(y, 0, TestSurface.Height - size);
+            x = Math.Clamp(x, 0, _testSurface.Width - size);
+            y = Math.Clamp(y, 0, _testSurface.Height - size);
 
             var rect = new Rect(x, y, size, size);
             AbsoluteLayout.SetLayoutBounds(label, rect);
             AbsoluteLayout.SetLayoutFlags(label, AbsoluteLayoutFlags.None);
 
-            TestSurface.Children.Add(label);
+            _testSurface.Children.Add(label);
 
             if (currentSelected == mapping)
             {
@@ -192,7 +338,7 @@ public partial class TestPage : ContentPage
 
         if (_selectedMapping == null)
         {
-            ConfigPanel.IsVisible = false;
+            _configPanel.IsVisible = false;
         }
     }
 
@@ -201,7 +347,7 @@ public partial class TestPage : ContentPage
         _selectedMapping = mapping;
         _selectedView = view;
 
-        foreach (var child in TestSurface.Children.OfType<Label>())
+        foreach (var child in _testSurface.Children.OfType<Label>())
         {
             if (_profile != null)
             {
@@ -220,12 +366,12 @@ public partial class TestPage : ContentPage
             lbl.BackgroundColor = GetButtonColor(mapping.TriggerButton);
         }
 
-        ConfigPanel.IsVisible = true;
+        _configPanel.IsVisible = true;
 
         _isUpdatingUi = true;
-        SelectedButtonLabel.Text = mapping.TriggerButton.ToString();
-        ActionTypePicker.SelectedItem = mapping.ActionType;
-        SizeSlider.Value = mapping.Size <= 0 ? 60 : mapping.Size;
+        _selectedButtonLabel.Text = mapping.TriggerButton.ToString();
+        _actionTypePicker.SelectedItem = mapping.ActionType;
+        _sizeSlider.Value = mapping.Size <= 0 ? 60 : mapping.Size;
         _isUpdatingUi = false;
     }
 
@@ -234,7 +380,7 @@ public partial class TestPage : ContentPage
         _selectedMapping = null;
         _selectedView = null;
 
-        foreach (var child in TestSurface.Children.OfType<Label>())
+        foreach (var child in _testSurface.Children.OfType<Label>())
         {
             if (_profile != null)
             {
@@ -247,8 +393,8 @@ public partial class TestPage : ContentPage
             }
         }
 
-        ConfigPanel.IsVisible = false;
-        SelectedButtonLabel.Text = "-";
+        _configPanel.IsVisible = false;
+        _selectedButtonLabel.Text = "-";
     }
 
     private void OnBackgroundTapped(object? sender, TappedEventArgs e)
@@ -261,7 +407,7 @@ public partial class TestPage : ContentPage
         if (_selectedMapping == null || _isUpdatingUi)
             return;
 
-        if (ActionTypePicker.SelectedItem is ActionType at)
+        if (_actionTypePicker.SelectedItem is ActionType at)
         {
             _selectedMapping.ActionType = at;
         }
@@ -278,7 +424,7 @@ public partial class TestPage : ContentPage
 
     private void OnButtonPanUpdated(View view, PanUpdatedEventArgs e, ActionMapping mapping)
     {
-        if (TestSurface == null)
+        if (_testSurface == null)
             return;
 
         switch (e.StatusType)
@@ -302,8 +448,8 @@ public partial class TestPage : ContentPage
                     if (!_dragStartBounds.TryGetValue(view, out var startBounds))
                         return;
 
-                    var width = TestSurface.Width;
-                    var height = TestSurface.Height;
+                    var width = _testSurface.Width;
+                    var height = _testSurface.Height;
 
                     if (width <= 0 || height <= 0)
                         return;
@@ -332,8 +478,8 @@ public partial class TestPage : ContentPage
 
                     _dragStartBounds.Remove(view);
 
-                    var width = TestSurface.Width;
-                    var height = TestSurface.Height;
+                    var width = _testSurface.Width;
+                    var height = _testSurface.Height;
 
                     if (width <= 0 || height <= 0)
                         return;

@@ -1,99 +1,33 @@
-using Microsoft.Maui.Storage;
-using System.Text.Json;
-
 namespace MOBaPadMapper2;
 
 public class MobaInputMapper
 {
     private readonly ITouchInjector _touch;
-    private readonly List<ActionMapping> _mappings;
+    private readonly List<ActionMapping> _mappings = new();
 
     private bool _isAiming;
     private ActionMapping? _currentAimMapping;
     private double _aimX;
     private double _aimY;
 
-    private const string StorageKey = "MobaInputMappings_v1";
-
-    // UJAWNIENIE MAPOWAÑ DLA UI
     public IList<ActionMapping> Mappings => _mappings;
 
     public MobaInputMapper(ITouchInjector touch)
     {
         _touch = touch;
-        _mappings = new List<ActionMapping>();
-        LoadMappings();
     }
 
-    /// <summary>
-    /// Podmieniamy mapowania z UI i od razu zapisujemy.
-    /// </summary>
     public void UpdateMappings(IEnumerable<ActionMapping> mappings)
     {
         _mappings.Clear();
         _mappings.AddRange(mappings);
-        SaveMappings();
-    }
-
-    public void SaveMappings()
-    {
-        try
-        {
-            var json = JsonSerializer.Serialize(_mappings);
-            Preferences.Set(StorageKey, json);
-        }
-        catch
-        {
-            // ignorujemy b³¹d zapisu
-        }
-    }
-
-    private void LoadMappings()
-    {
-        try
-        {
-            if (Preferences.ContainsKey(StorageKey))
-            {
-                var json = Preferences.Get(StorageKey, string.Empty);
-                if (!string.IsNullOrWhiteSpace(json))
-                {
-                    var loaded = JsonSerializer.Deserialize<List<ActionMapping>>(json);
-                    if (loaded != null && loaded.Count > 0)
-                    {
-                        _mappings.AddRange(loaded);
-                        return;
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // w razie b³êdu – leæmy na domyœlnych
-        }
-
-        // DOMYŒLNE MAPOWANIA (przyk³ad)
-        _mappings.Add(new ActionMapping
-        {
-            TriggerButton = GamepadButton.A,
-            ActionType = ActionType.Tap,
-            TargetX = 0.5,
-            TargetY = 0.5,
-            Size = 60
-        });
-
-        _mappings.Add(new ActionMapping
-        {
-            TriggerButton = GamepadButton.RB,
-            ActionType = ActionType.HoldAndAim,
-            TargetX = 0.8,
-            TargetY = 0.8,
-            UseRightStickForDirection = true,
-            Size = 60
-        });
     }
 
     public async Task OnGamepadStateChanged(GamepadState state, double screenWidth, double screenHeight)
     {
+        if (_mappings.Count == 0)
+            return;
+
         foreach (var mapping in _mappings)
         {
             bool pressed = state.PressedButtons.Contains(mapping.TriggerButton);

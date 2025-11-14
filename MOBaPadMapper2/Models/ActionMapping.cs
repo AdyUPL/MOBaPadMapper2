@@ -21,6 +21,6 @@ public class ActionMapping
 
     public bool UseRightStickForDirection { get; set; }
 
-    // ROZMIAR PRZYCISKU NA EKRANIE KONFIGURACJI
+    // rozmiar przycisku na ekranie konfiguracji
     public double Size { get; set; } = 60;
 }
