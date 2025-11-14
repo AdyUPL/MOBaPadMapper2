@@ -1,39 +1,94 @@
+using Microsoft.Maui.Storage;
+using System.Text.Json;
+
 namespace MOBaPadMapper2;
 
 public class MobaInputMapper
 {
     private readonly ITouchInjector _touch;
-    private readonly IList<ActionMapping> _mappings;
+    private readonly List<ActionMapping> _mappings;
 
     private bool _isAiming;
     private ActionMapping? _currentAimMapping;
     private double _aimX;
     private double _aimY;
 
+    private const string StorageKey = "MobaInputMappings_v1";
+
+    // UJAWNIENIE MAPOWAÑ DLA UI
     public IList<ActionMapping> Mappings => _mappings;
 
     public MobaInputMapper(ITouchInjector touch)
     {
         _touch = touch;
+        _mappings = new List<ActionMapping>();
 
-        _mappings = new List<ActionMapping>
+        LoadMappings();   // <- próbujemy wczytaæ z pamiêci
+    }
+
+    /// <summary>
+    /// Podmieniamy mapowania z UI i od razu zapisujemy.
+    /// </summary>
+    public void UpdateMappings(IEnumerable<ActionMapping> mappings)
+    {
+        _mappings.Clear();
+        _mappings.AddRange(mappings);
+        SaveMappings();
+    }
+
+    public void SaveMappings()
+    {
+        try
         {
-            new ActionMapping
+            var json = JsonSerializer.Serialize(_mappings);
+            Preferences.Set(StorageKey, json);
+        }
+        catch
+        {
+            // na razie cicho – w razie czego po prostu nie zapisze
+        }
+    }
+
+    private void LoadMappings()
+    {
+        try
+        {
+            if (Preferences.ContainsKey(StorageKey))
             {
-                TriggerButton = GamepadButton.A,
-                ActionType = ActionType.Tap,
-                TargetX = 0.5,
-                TargetY = 0.5
-            },
-            new ActionMapping
-            {
-                TriggerButton = GamepadButton.RB,
-                ActionType = ActionType.HoldAndAim,
-                TargetX = 0.8,
-                TargetY = 0.8,
-                UseRightStickForDirection = true
+                var json = Preferences.Get(StorageKey, string.Empty);
+                if (!string.IsNullOrWhiteSpace(json))
+                {
+                    var loaded = JsonSerializer.Deserialize<List<ActionMapping>>(json);
+                    if (loaded != null && loaded.Count > 0)
+                    {
+                        _mappings.AddRange(loaded);
+                        return;
+                    }
+                }
             }
-        };
+        }
+        catch
+        {
+            // jeœli coœ pójdzie nie tak – wczytujemy domyœlne
+        }
+
+        // DOMYŒLNE MAPOWANIA (jak wczeœniej)
+        _mappings.Add(new ActionMapping
+        {
+            TriggerButton = GamepadButton.A,
+            ActionType = ActionType.Tap,
+            TargetX = 0.5,
+            TargetY = 0.5
+        });
+
+        _mappings.Add(new ActionMapping
+        {
+            TriggerButton = GamepadButton.RB,
+            ActionType = ActionType.HoldAndAim,
+            TargetX = 0.8,
+            TargetY = 0.8,
+            UseRightStickForDirection = true
+        });
     }
 
     public async Task OnGamepadStateChanged(GamepadState state, double screenWidth, double screenHeight)
@@ -72,7 +127,7 @@ public class MobaInputMapper
                     var dx = state.RightStick.X;
                     var dy = -state.RightStick.Y;
 
-                    double length = 200;
+                    double length = 200; // px – d³ugoœæ swipe
                     double endX = _aimX + dx * length;
                     double endY = _aimY + dy * length;
 

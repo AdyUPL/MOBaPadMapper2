@@ -1,9 +1,9 @@
 ﻿using Microsoft.Maui.Controls;
 using Microsoft.Maui.Layouts;
+using Microsoft.Maui.Dispatching;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 namespace MOBaPadMapper2;
 
 [QueryProperty(nameof(Profile), "profile")]
@@ -18,8 +18,11 @@ public partial class TestPage : ContentPage
     private View? _selectedView;
     private bool _isUpdatingUi;
 
-    // startowe położenie dla drag & drop
     private readonly Dictionary<View, Rect> _dragStartBounds = new();
+
+    // NOWE: serwisy z DI
+    private readonly IGamepadInputService _gamepad;
+    private readonly MobaInputMapper _mapper;
 
     public GameProfile? Profile
     {
@@ -32,20 +35,20 @@ public partial class TestPage : ContentPage
         }
     }
 
-    public TestPage()
+    public TestPage(IGamepadInputService gamepad, MobaInputMapper mapper)
     {
         InitializeComponent();
 
-        // lista dostępnych działań
+        _gamepad = gamepad;
+        _mapper = mapper;
+
         ActionTypePicker.ItemsSource = Enum.GetValues(typeof(ActionType)).Cast<ActionType>().ToList();
         ActionTypePicker.SelectedIndexChanged += ActionTypePicker_SelectedIndexChanged;
 
         SizeSlider.ValueChanged += SizeSlider_ValueChanged;
 
-        // kiedy powierzchnia dostanie rozmiar – spróbuj narysować przyciski
         TestSurface.SizeChanged += (s, e) => RenderButtons();
 
-        // kliknięcie w tło = odznaczenie
         var bgTap = new TapGestureRecognizer();
         bgTap.Tapped += OnBackgroundTapped;
         TestSurface.GestureRecognizers.Add(bgTap);
@@ -54,7 +57,19 @@ public partial class TestPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+
+        // podpinamy się do gamepada
+        _gamepad.GamepadUpdated += OnGamepadUpdated;
+
         RenderButtons();
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+
+        // wypinamy event – żeby nie wyciekały subskrypcje
+        _gamepad.GamepadUpdated -= OnGamepadUpdated;
     }
 
     protected override void OnSizeAllocated(double width, double height)
@@ -67,6 +82,50 @@ public partial class TestPage : ContentPage
             _lastHeight = height;
             RenderButtons();
         }
+    }
+
+    // ====== REAKCJA NA GAMEPADA NA EKRANIE KONFIGURACJI ======
+    private void OnGamepadUpdated(object? sender, GamepadState state)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (_profile == null || _profile.Mappings == null || _profile.Mappings.Count == 0)
+                return;
+
+            if (state.PressedButtons == null || state.PressedButtons.Count == 0)
+                return;
+
+            // bierzemy pierwszy wciśnięty przycisk
+            var pressed = state.PressedButtons.First();
+
+            // szukamy mapowania dla tego przycisku
+            var mapping = _profile.Mappings.FirstOrDefault(m => m.TriggerButton == pressed);
+            if (mapping == null)
+                return;
+
+            // szukamy odpowiadającego labela
+            var view = TestSurface.Children
+                .OfType<Label>()
+                .FirstOrDefault(l => string.Equals(l.Text, mapping.TriggerButton.ToString(), StringComparison.Ordinal));
+
+            if (view != null)
+            {
+                SelectMapping(mapping, view);
+            }
+        });
+    }
+
+    // ====== WYGLĄD PRZYCISKÓW – KOLORY JAK NA PADZIE ======
+    private static Color GetButtonColor(GamepadButton button)
+    {
+        return button switch
+        {
+            GamepadButton.A => Color.FromArgb("#0DB45E"), // zielony
+            GamepadButton.B => Color.FromArgb("#D83C3C"), // czerwony
+            GamepadButton.X => Color.FromArgb("#2563EB"), // niebieski
+            GamepadButton.Y => Color.FromArgb("#EAB308"), // żółty
+            _ => Colors.DimGray
+        };
     }
 
     private void RenderButtons()
@@ -86,34 +145,33 @@ public partial class TestPage : ContentPage
         {
             var size = mapping.Size <= 0 ? 60 : mapping.Size;
 
+            var baseColor = GetButtonColor(mapping.TriggerButton);
+
             var label = new Label
             {
                 Text = mapping.TriggerButton.ToString(),
                 TextColor = Colors.White,
-                BackgroundColor = Colors.DimGray,
+                BackgroundColor = baseColor,
                 WidthRequest = size,
                 HeightRequest = size,
                 HorizontalTextAlignment = TextAlignment.Center,
                 VerticalTextAlignment = TextAlignment.Center,
-                FontAttributes = FontAttributes.Bold
+                FontAttributes = FontAttributes.Bold,
+                FontSize = 18,
+                Opacity = 0.85
             };
 
-            // pan – przeciąganie
             var pan = new PanGestureRecognizer();
             pan.PanUpdated += (s, e) => OnButtonPanUpdated(label, e, mapping);
             label.GestureRecognizers.Add(pan);
 
-            // tap – zaznaczenie przycisku
             var tap = new TapGestureRecognizer { NumberOfTapsRequired = 1 };
             tap.Tapped += (s, e) =>
             {
-                // żeby kliknięcie w przycisk nie wywoływało tapu z tła
-                //e.Handle = true;
                 SelectMapping(mapping, label);
             };
             label.GestureRecognizers.Add(tap);
 
-            // Pozycjonowanie – TargetX/Y (0..1 – środek)
             var x = mapping.TargetX * TestSurface.Width - size / 2.0;
             var y = mapping.TargetY * TestSurface.Height - size / 2.0;
 
@@ -132,7 +190,6 @@ public partial class TestPage : ContentPage
             }
         }
 
-        // jeśli po odrysowaniu nie ma zaznaczonego przycisku → schowaj panel
         if (_selectedMapping == null)
         {
             ConfigPanel.IsVisible = false;
@@ -144,23 +201,29 @@ public partial class TestPage : ContentPage
         _selectedMapping = mapping;
         _selectedView = view;
 
-        // podświetlenie
+        // reset wyglądu wszystkich przycisków do "podstawowych" kolorów
         foreach (var child in TestSurface.Children.OfType<Label>())
         {
-            child.Opacity = 0.7;
-            child.BackgroundColor = Colors.DimGray;
+            if (_profile != null)
+            {
+                var map = _profile.Mappings.FirstOrDefault(m => m.TriggerButton.ToString() == child.Text);
+                if (map != null)
+                {
+                    child.BackgroundColor = GetButtonColor(map.TriggerButton);
+                    child.Opacity = 0.85;
+                }
+            }
         }
 
         if (view is Label lbl)
         {
+            // zaznaczony – pełna nieprzezroczystość + delikatne rozjaśnienie
             lbl.Opacity = 1.0;
-            lbl.BackgroundColor = Colors.Orange;
+            lbl.BackgroundColor = GetButtonColor(mapping.TriggerButton);
         }
 
-        // pokazujemy panel
         ConfigPanel.IsVisible = true;
 
-        // aktualizacja panelu ustawień
         _isUpdatingUi = true;
         SelectedButtonLabel.Text = mapping.TriggerButton.ToString();
         ActionTypePicker.SelectedItem = mapping.ActionType;
@@ -175,8 +238,15 @@ public partial class TestPage : ContentPage
 
         foreach (var child in TestSurface.Children.OfType<Label>())
         {
-            child.Opacity = 1.0;
-            child.BackgroundColor = Colors.DimGray;
+            if (_profile != null)
+            {
+                var map = _profile.Mappings.FirstOrDefault(m => m.TriggerButton.ToString() == child.Text);
+                if (map != null)
+                {
+                    child.BackgroundColor = GetButtonColor(map.TriggerButton);
+                    child.Opacity = 0.85;
+                }
+            }
         }
 
         ConfigPanel.IsVisible = false;
@@ -185,7 +255,6 @@ public partial class TestPage : ContentPage
 
     private void OnBackgroundTapped(object? sender, TappedEventArgs e)
     {
-        // kliknięcie w puste miejsce = odznaczenie
         ClearSelection();
     }
 
@@ -205,10 +274,8 @@ public partial class TestPage : ContentPage
         if (_selectedMapping == null || _isUpdatingUi)
             return;
 
-        // 1) zaktualizuj model
         _selectedMapping.Size = e.NewValue;
 
-        // 2) przebuduj przyciski – ale zachowamy zaznaczenie
         RenderButtons();
     }
 
@@ -221,10 +288,8 @@ public partial class TestPage : ContentPage
         {
             case GestureStatus.Started:
                 {
-                    // zapamiętujemy startowe położenie
                     var startBounds = AbsoluteLayout.GetLayoutBounds(view);
 
-                    // jeżeli brak szerokości/wysokości z layoutu – użyj rozmiaru z mappingu
                     if (startBounds.Width <= 0 || startBounds.Height <= 0)
                     {
                         var size = mapping.Size <= 0 ? 60 : mapping.Size;
@@ -280,7 +345,6 @@ public partial class TestPage : ContentPage
                     var buttonWidth = bounds.Width;
                     var buttonHeight = bounds.Height;
 
-                    // zapisujemy pozycję jako środki (proporcje 0..1)
                     var centerX = bounds.X + buttonWidth / 2.0;
                     var centerY = bounds.Y + buttonHeight / 2.0;
 
@@ -292,7 +356,6 @@ public partial class TestPage : ContentPage
         }
     }
 
-    // Dodawanie nowego przycisku bezpośrednio z ekranu konfiguracyjnego
     private async void OnAddMappingClicked(object sender, EventArgs e)
     {
         if (_profile == null)
