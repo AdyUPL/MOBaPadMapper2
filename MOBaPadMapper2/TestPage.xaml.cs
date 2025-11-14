@@ -1,6 +1,7 @@
 ﻿using Microsoft.Maui.Controls;
 using Microsoft.Maui.Layouts;
 using Microsoft.Maui.Dispatching;
+using Microsoft.Maui.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,7 @@ public partial class TestPage : ContentPage
     private View? _selectedView;
     private bool _isUpdatingUi;
 
+    // muszą być typy generyczne
     private readonly Dictionary<View, Rect> _dragStartBounds = new();
 
     private readonly IGamepadInputService _gamepad;
@@ -42,9 +44,13 @@ public partial class TestPage : ContentPage
         _gamepad = gamepad;
         _mapper = mapper;
 
-        ActionTypePicker.ItemsSource = Enum.GetValues(typeof(ActionType)).Cast<ActionType>().ToList();
-        ActionTypePicker.SelectedIndexChanged += ActionTypePicker_SelectedIndexChanged;
+        // tu też musi być konkretny typ
+        ActionTypePicker.ItemsSource = Enum
+            .GetValues(typeof(ActionType))
+            .Cast<ActionType>()
+            .ToList();
 
+        ActionTypePicker.SelectedIndexChanged += ActionTypePicker_SelectedIndexChanged;
         SizeSlider.ValueChanged += SizeSlider_ValueChanged;
 
         TestSurface.SizeChanged += (s, e) => RenderButtons();
@@ -57,7 +63,6 @@ public partial class TestPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-
         _gamepad.GamepadUpdated += OnGamepadUpdated;
         RenderButtons();
     }
@@ -65,10 +70,9 @@ public partial class TestPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-
         _gamepad.GamepadUpdated -= OnGamepadUpdated;
 
-        // po wyjściu z ekranu zapisujemy aktualne mapowania
+        // zapisujemy mapowania
         if (_profile != null)
         {
             _mapper.UpdateMappings(_profile.Mappings);
@@ -99,6 +103,7 @@ public partial class TestPage : ContentPage
                 return;
 
             var pressed = state.PressedButtons.First();
+
             var mapping = _profile.Mappings.FirstOrDefault(m => m.TriggerButton == pressed);
             if (mapping == null)
                 return;
@@ -281,6 +286,7 @@ public partial class TestPage : ContentPage
             case GestureStatus.Started:
                 {
                     var startBounds = AbsoluteLayout.GetLayoutBounds(view);
+
                     if (startBounds.Width <= 0 || startBounds.Height <= 0)
                     {
                         var size = mapping.Size <= 0 ? 60 : mapping.Size;
@@ -341,7 +347,6 @@ public partial class TestPage : ContentPage
 
                     mapping.TargetX = centerX / width;
                     mapping.TargetY = centerY / height;
-
                     break;
                 }
         }

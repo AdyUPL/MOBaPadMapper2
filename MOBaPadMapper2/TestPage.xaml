@@ -10,7 +10,7 @@
                         Grid.Column="0"
                         BackgroundColor="#202020"
                         Margin="10">
-            <!-- tu w kodzie-behind dorysowujesz przyciski (Label-e) -->
+            <!-- Przyciski są dodawane w kodzie (TestPage.xaml.cs) -->
         </AbsoluteLayout>
 
         <!-- PRAWA STRONA – PANEL KONFIGURACJI -->
@@ -19,6 +19,7 @@
               BackgroundColor="#181818"
               Padding="10"
               IsVisible="False">
+
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -47,7 +48,7 @@
                        FontAttributes="Bold" />
             </HorizontalStackLayout>
 
-            <!-- Rodzaj akcji -->
+            <!-- Typ akcji -->
             <StackLayout Grid.Row="2" Margin="0,10,0,0">
                 <Label Text="Typ akcji"
                        TextColor="White" />
@@ -65,19 +66,19 @@
                         Value="60" />
             </StackLayout>
 
-            <!-- (opcjonalnie) dodatkowe ustawienia / opis -->
+            <!-- Info -->
             <StackLayout Grid.Row="4"
                          Margin="0,10,0,0"
                          Spacing="6">
-                <Label Text="Przeciągnij przyciski na powierzchni po lewej, aby zmienić ich pozycję."
+                <Label Text="Przeciągnij przyciski po lewej, aby zmienić ich pozycję."
                        TextColor="LightGray"
                        FontSize="12" />
-                <Label Text="Kliknij w puste miejsce na powierzchni, aby odznaczyć przycisk."
+                <Label Text="Kliknij w puste miejsce na powierzchni, aby odznaczyć."
                        TextColor="LightGray"
                        FontSize="12" />
             </StackLayout>
 
-            <!-- Dodawanie nowego mapowania -->
+            <!-- Dodanie nowego przycisku -->
             <Button Grid.Row="5"
                     Text="Dodaj mapowanie"
                     Margin="0,10,0,0"

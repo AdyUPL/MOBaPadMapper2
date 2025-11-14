@@ -2,47 +2,14 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MOBaPadMapper2.MainPage"
-             Title="Gry">
+             BackgroundColor="#111111">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="20">
-
-            <Label Text="MobaPad – Gry"
-                   FontAttributes="Bold"
-                   FontSize="22" />
-
-            <Frame Padding="10" HasShadow="True">
-                <VerticalStackLayout Spacing="10">
-
-                    <Label Text="Gra"
-                           FontAttributes="Bold" />
-
-                    <HorizontalStackLayout Spacing="10">
-                        <Picker x:Name="GamePicker"
-                                Title="Wybierz grę"
-                                WidthRequest="220"
-                                SelectedIndexChanged="GamePicker_SelectedIndexChanged" />
-                        <Button Text="Nowa gra"
-                                Clicked="OnAddGameClicked" />
-                    </HorizontalStackLayout>
-
-                    <Label Text="Kontroler"
-                           FontAttributes="Bold"
-                           Margin="0,10,0,0" />
-
-                    <Label x:Name="ControllerNameLabel"
-                           Text="Brak podłączonego kontrolera"
-                           FontSize="14" />
-
-                </VerticalStackLayout>
-            </Frame>
-
-            <Button x:Name="ConfigButton"
-                    Text="Konfiguruj przyciski"
-                    Clicked="OnOpenTestClicked"
-                    IsEnabled="False" />
-
-        </VerticalStackLayout>
-    </ScrollView>
-
+    <Grid>
+        <Label Text="MOBaPadMapper2"
+               HorizontalOptions="Center"
+               VerticalOptions="Center"
+               TextColor="White"
+               FontSize="24"
+               FontAttributes="Bold" />
+    </Grid>
 </ContentPage>
