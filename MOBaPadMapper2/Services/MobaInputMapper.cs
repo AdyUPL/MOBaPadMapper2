@@ -22,8 +22,7 @@ public class MobaInputMapper
     {
         _touch = touch;
         _mappings = new List<ActionMapping>();
-
-        LoadMappings();   // <- próbujemy wczytaæ z pamiêci
+        LoadMappings();
     }
 
     /// <summary>
@@ -45,7 +44,7 @@ public class MobaInputMapper
         }
         catch
         {
-            // na razie cicho – w razie czego po prostu nie zapisze
+            // ignorujemy b³¹d zapisu
         }
     }
 
@@ -69,16 +68,17 @@ public class MobaInputMapper
         }
         catch
         {
-            // jeœli coœ pójdzie nie tak – wczytujemy domyœlne
+            // w razie b³êdu – leæmy na domyœlnych
         }
 
-        // DOMYŒLNE MAPOWANIA (jak wczeœniej)
+        // DOMYŒLNE MAPOWANIA (przyk³ad)
         _mappings.Add(new ActionMapping
         {
             TriggerButton = GamepadButton.A,
             ActionType = ActionType.Tap,
             TargetX = 0.5,
-            TargetY = 0.5
+            TargetY = 0.5,
+            Size = 60
         });
 
         _mappings.Add(new ActionMapping
@@ -87,7 +87,8 @@ public class MobaInputMapper
             ActionType = ActionType.HoldAndAim,
             TargetX = 0.8,
             TargetY = 0.8,
-            UseRightStickForDirection = true
+            UseRightStickForDirection = true,
+            Size = 60
         });
     }
 

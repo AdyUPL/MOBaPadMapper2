@@ -4,6 +4,7 @@ using Microsoft.Maui.Dispatching;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 namespace MOBaPadMapper2;
 
 [QueryProperty(nameof(Profile), "profile")]
@@ -20,7 +21,6 @@ public partial class TestPage : ContentPage
 
     private readonly Dictionary<View, Rect> _dragStartBounds = new();
 
-    // NOWE: serwisy z DI
     private readonly IGamepadInputService _gamepad;
     private readonly MobaInputMapper _mapper;
 
@@ -58,9 +58,7 @@ public partial class TestPage : ContentPage
     {
         base.OnAppearing();
 
-        // podpinamy się do gamepada
         _gamepad.GamepadUpdated += OnGamepadUpdated;
-
         RenderButtons();
     }
 
@@ -68,8 +66,13 @@ public partial class TestPage : ContentPage
     {
         base.OnDisappearing();
 
-        // wypinamy event – żeby nie wyciekały subskrypcje
         _gamepad.GamepadUpdated -= OnGamepadUpdated;
+
+        // po wyjściu z ekranu zapisujemy aktualne mapowania
+        if (_profile != null)
+        {
+            _mapper.UpdateMappings(_profile.Mappings);
+        }
     }
 
     protected override void OnSizeAllocated(double width, double height)
@@ -84,7 +87,7 @@ public partial class TestPage : ContentPage
         }
     }
 
-    // ====== REAKCJA NA GAMEPADA NA EKRANIE KONFIGURACJI ======
+    // ====== REAKCJA NA GAMEPADA ======
     private void OnGamepadUpdated(object? sender, GamepadState state)
     {
         MainThread.BeginInvokeOnMainThread(() =>
@@ -95,15 +98,11 @@ public partial class TestPage : ContentPage
             if (state.PressedButtons == null || state.PressedButtons.Count == 0)
                 return;
 
-            // bierzemy pierwszy wciśnięty przycisk
             var pressed = state.PressedButtons.First();
-
-            // szukamy mapowania dla tego przycisku
             var mapping = _profile.Mappings.FirstOrDefault(m => m.TriggerButton == pressed);
             if (mapping == null)
                 return;
 
-            // szukamy odpowiadającego labela
             var view = TestSurface.Children
                 .OfType<Label>()
                 .FirstOrDefault(l => string.Equals(l.Text, mapping.TriggerButton.ToString(), StringComparison.Ordinal));
@@ -144,7 +143,6 @@ public partial class TestPage : ContentPage
         foreach (var mapping in _profile.Mappings)
         {
             var size = mapping.Size <= 0 ? 60 : mapping.Size;
-
             var baseColor = GetButtonColor(mapping.TriggerButton);
 
             var label = new Label
@@ -166,10 +164,7 @@ public partial class TestPage : ContentPage
             label.GestureRecognizers.Add(pan);
 
             var tap = new TapGestureRecognizer { NumberOfTapsRequired = 1 };
-            tap.Tapped += (s, e) =>
-            {
-                SelectMapping(mapping, label);
-            };
+            tap.Tapped += (s, e) => SelectMapping(mapping, label);
             label.GestureRecognizers.Add(tap);
 
             var x = mapping.TargetX * TestSurface.Width - size / 2.0;
@@ -201,7 +196,6 @@ public partial class TestPage : ContentPage
         _selectedMapping = mapping;
         _selectedView = view;
 
-        // reset wyglądu wszystkich przycisków do "podstawowych" kolorów
         foreach (var child in TestSurface.Children.OfType<Label>())
         {
             if (_profile != null)
@@ -217,7 +211,6 @@ public partial class TestPage : ContentPage
 
         if (view is Label lbl)
         {
-            // zaznaczony – pełna nieprzezroczystość + delikatne rozjaśnienie
             lbl.Opacity = 1.0;
             lbl.BackgroundColor = GetButtonColor(mapping.TriggerButton);
         }
@@ -275,7 +268,6 @@ public partial class TestPage : ContentPage
             return;
 
         _selectedMapping.Size = e.NewValue;
-
         RenderButtons();
     }
 
@@ -289,7 +281,6 @@ public partial class TestPage : ContentPage
             case GestureStatus.Started:
                 {
                     var startBounds = AbsoluteLayout.GetLayoutBounds(view);
-
                     if (startBounds.Width <= 0 || startBounds.Height <= 0)
                     {
                         var size = mapping.Size <= 0 ? 60 : mapping.Size;

@@ -1,76 +1,48 @@
-﻿using Microsoft.Maui;
-using System.Collections.ObjectModel;
-
-namespace MOBaPadMapper2;
-
-public partial class MainPage : ContentPage
+﻿namespace MOBaPadMapper2
 {
-    private readonly ObservableCollection<GameProfile> _games = new();
-    private GameProfile? _selectedGame;
+    using Microsoft.Maui.Devices;
 
-    public MainPage()
+    public partial class MainPage : ContentPage
     {
-        InitializeComponent();
+        private readonly IGamepadInputService _gamepad;
+        private readonly MobaInputMapper _mapper;
 
-        // Przykładowa gra startowa z 2 mapowaniami – możesz zostawić albo usunąć
-        var defaultProfile = new GameProfile("Domyślna gra");
-        defaultProfile.Mappings.Add(new ActionMapping
+        public MainPage(IGamepadInputService gamepad, MobaInputMapper mapper)
         {
-            TriggerButton = GamepadButton.A,
-            ActionType = ActionType.Tap,
-            TargetX = 0.5,
-            TargetY = 0.8,
-            Size = 60
-        });
-        defaultProfile.Mappings.Add(new ActionMapping
+            InitializeComponent();
+
+            _gamepad = gamepad;
+            _mapper = mapper;
+
+            _gamepad.GamepadUpdated += OnGamepadUpdated;
+        }
+
+        protected override void OnDisappearing()
         {
-            TriggerButton = GamepadButton.RB,
-            ActionType = ActionType.HoldAndAim,
-            TargetX = 0.8,
-            TargetY = 0.5,
-            UseRightStickForDirection = true,
-            Size = 60
-        });
+            base.OnDisappearing();
+            _gamepad.GamepadUpdated -= OnGamepadUpdated;
+        }
 
-        _games.Add(defaultProfile);
-
-        GamePicker.ItemsSource = _games;
-        GamePicker.ItemDisplayBinding = new Binding(nameof(GameProfile.Name));
-        GamePicker.SelectedItem = defaultProfile;
-
-        UpdateSelectedGame();
-
-        ControllerNameLabel.Text = "Kontroler: (do podpięcia z IGamepadInputService)";
-    }
-
-    private void UpdateSelectedGame()
-    {
-        _selectedGame = GamePicker.SelectedItem as GameProfile;
-        ConfigButton.IsEnabled = _selectedGame != null;
-    }
-
-    private void GamePicker_SelectedIndexChanged(object sender, EventArgs e)
-    {
-        UpdateSelectedGame();
-    }
-
-    private async void OnAddGameClicked(object sender, EventArgs e)
-    {
-        var name = await DisplayPromptAsync("Nowa gra", "Podaj nazwę gry:");
-        if (string.IsNullOrWhiteSpace(name)) return;
-
-        var profile = new GameProfile(name);
-        _games.Add(profile);
-        GamePicker.SelectedItem = profile;
-    }
-
-    private async void OnOpenTestClicked(object sender, EventArgs e)
-    {
-        if (_selectedGame == null) return;
-
-        await Shell.Current.GoToAsync(nameof(TestPage), true, new Dictionary<string, object>
+        private void GamePicker_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ["profile"] = _selectedGame
-        });
+            // Tu możesz później dodać logikę wyboru profilu gry.
+            // Na razie zostaw puste, żeby tylko zniknął błąd kompilacji.
+        }
+
+        private async void OnGamepadUpdated(object? sender, GamepadState state)
+        {
+            // Rozmiar widoku – jeśli 0, bierzemy fizyczny ekran
+            double width = this.Width;
+            double height = this.Height;
+
+            if (width <= 0 || height <= 0)
+            {
+                var info = DeviceDisplay.Current.MainDisplayInfo;
+                width = info.Width / info.Density;
+                height = info.Height / info.Density;
+            }
+
+            await _mapper.OnGamepadStateChanged(state, width, height);
+        }
     }
 }

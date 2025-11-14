@@ -2,65 +2,86 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MOBaPadMapper2.TestPage"
-             BackgroundColor="Black"
-             Title="Ekran konfiguracyjny">
+             BackgroundColor="#111111">
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid ColumnDefinitions="3*,2*">
+        <!-- LEWA STRONA – POWIERZCHNIA TESTOWA -->
+        <AbsoluteLayout x:Name="TestSurface"
+                        Grid.Column="0"
+                        BackgroundColor="#202020"
+                        Margin="10">
+            <!-- tu w kodzie-behind dorysowujesz przyciski (Label-e) -->
+        </AbsoluteLayout>
 
-        <!-- Pasek u góry -->
-        <HorizontalStackLayout Grid.Row="0"
-                               Padding="10"
-                               BackgroundColor="DimGray"
-                               Spacing="10">
+        <!-- PRAWA STRONA – PANEL KONFIGURACJI -->
+        <Grid x:Name="ConfigPanel"
+              Grid.Column="1"
+              BackgroundColor="#181818"
+              Padding="10"
+              IsVisible="False">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Nazwa gry -->
             <Label x:Name="GameNameLabel"
+                   Grid.Row="0"
                    Text="Gra: -"
                    TextColor="White"
-                   FontAttributes="Bold" />
-            <Button Text="Dodaj przycisk"
+                   FontAttributes="Bold"
+                   FontSize="18"
+                   Margin="0,0,0,10" />
+
+            <!-- Aktualnie wybrany przycisk -->
+            <HorizontalStackLayout Grid.Row="1" Spacing="8">
+                <Label Text="Wybrany przycisk:"
+                       TextColor="White" />
+                <Label x:Name="SelectedButtonLabel"
+                       Text="-"
+                       TextColor="Orange"
+                       FontAttributes="Bold" />
+            </HorizontalStackLayout>
+
+            <!-- Rodzaj akcji -->
+            <StackLayout Grid.Row="2" Margin="0,10,0,0">
+                <Label Text="Typ akcji"
+                       TextColor="White" />
+                <Picker x:Name="ActionTypePicker"
+                        Title="Wybierz akcję" />
+            </StackLayout>
+
+            <!-- Rozmiar przycisku -->
+            <StackLayout Grid.Row="3" Margin="0,10,0,0">
+                <Label Text="Rozmiar przycisku"
+                       TextColor="White" />
+                <Slider x:Name="SizeSlider"
+                        Minimum="30"
+                        Maximum="160"
+                        Value="60" />
+            </StackLayout>
+
+            <!-- (opcjonalnie) dodatkowe ustawienia / opis -->
+            <StackLayout Grid.Row="4"
+                         Margin="0,10,0,0"
+                         Spacing="6">
+                <Label Text="Przeciągnij przyciski na powierzchni po lewej, aby zmienić ich pozycję."
+                       TextColor="LightGray"
+                       FontSize="12" />
+                <Label Text="Kliknij w puste miejsce na powierzchni, aby odznaczyć przycisk."
+                       TextColor="LightGray"
+                       FontSize="12" />
+            </StackLayout>
+
+            <!-- Dodawanie nowego mapowania -->
+            <Button Grid.Row="5"
+                    Text="Dodaj mapowanie"
+                    Margin="0,10,0,0"
                     Clicked="OnAddMappingClicked" />
-        </HorizontalStackLayout>
-
-        <!-- Główna część: oba elementy w TEJ SAMEJ komórce -->
-        <Grid Grid.Row="1">
-
-            <!-- Cały ekran roboczy pod spodem -->
-            <AbsoluteLayout x:Name="TestSurface"
-                            BackgroundColor="Black" />
-
-            <!-- Panel konfiguracji NA WIERZCHU, przyklejony z prawej -->
-            <Frame x:Name="ConfigPanel"
-                   Padding="10"
-                   HasShadow="True"
-                   BackgroundColor="#222222"
-                   IsVisible="False"
-                   HorizontalOptions="End"
-                   VerticalOptions="Fill"
-                   WidthRequest="260"
-                   Margin="0,0,0,0">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Wybrany przycisk:"
-                           TextColor="White" />
-                    <Label x:Name="SelectedButtonLabel"
-                           Text="-"
-                           TextColor="White"
-                           FontAttributes="Bold" />
-
-                    <Label Text="Działanie"
-                           TextColor="White"
-                           Margin="0,8,0,0" />
-                    <Picker x:Name="ActionTypePicker"
-                            Title="Wybierz działanie" />
-
-                    <Label Text="Rozmiar przycisku"
-                           TextColor="White"
-                           Margin="0,8,0,0" />
-                    <Slider x:Name="SizeSlider"
-                            Minimum="40"
-                            Maximum="140"
-                            Value="60" />
-                </VerticalStackLayout>
-            </Frame>
-
         </Grid>
     </Grid>
 </ContentPage>

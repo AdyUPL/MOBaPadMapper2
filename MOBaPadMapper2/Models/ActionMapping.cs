@@ -21,6 +21,6 @@ public class ActionMapping
 
     public bool UseRightStickForDirection { get; set; }
 
-    // NOWE: rozmiar „klocka” na ekranie konfiguracyjnym
+    // ROZMIAR PRZYCISKU NA EKRANIE KONFIGURACJI
     public double Size { get; set; } = 60;
 }

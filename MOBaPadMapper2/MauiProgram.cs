@@ -7,10 +7,6 @@ namespace MOBaPadMapper2
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
-            builder.Services.AddSingleton<ITouchInjector, AndroidTouchInjector>();
-            builder.Services.AddSingleton<IGamepadInputService>(_ => GamepadInputService.Instance);
-            builder.Services.AddSingleton<MobaInputMapper>();
-            builder.Services.AddSingleton<MainPage>();
             builder
                 .UseMauiApp<App>()
                 .ConfigureFonts(fonts =>
@@ -19,8 +15,17 @@ namespace MOBaPadMapper2
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            // SERWISY (tu musisz mieć klasy AndroidTouchInjector i GamepadInputService)
+            builder.Services.AddSingleton<ITouchInjector, AndroidTouchInjector>();
+            builder.Services.AddSingleton<IGamepadInputService>(_ => GamepadInputService.Instance);
+            builder.Services.AddSingleton<MobaInputMapper>();
+
+            // STRONY
+            builder.Services.AddSingleton<MainPage>();
+            builder.Services.AddTransient<TestPage>();
+
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
             return builder.Build();
