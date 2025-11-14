@@ -33,5 +33,14 @@
                TextColor="LightGray"
                FontSize="12" />
 
+        <Button Text="Testowy przycisk"
+            Clicked="OnTestButtonClicked" />
+
+        <Label x:Name="GamepadStatusLabel"
+           Text="Brak sygnału z gamepada"
+           FontSize="18"
+           HorizontalOptions="Center" />
+
     </VerticalStackLayout>
+
 </ContentPage>

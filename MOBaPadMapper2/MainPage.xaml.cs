@@ -49,5 +49,18 @@ namespace MOBaPadMapper2
 
             await _mapper.OnGamepadStateChanged(state, width, height);
         }
+        private void OnGamepadButtonChanged(object? sender, GamepadButtonEventArgs e)
+        {
+            // Tu tylko wizualny test
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                GamepadStatusLabel.Text = $"Przycisk: {e.Button}  Stan: {(e.IsPressed ? "Down" : "Up")}";
+            });
+        }
+
+        private void OnTestButtonClicked(object sender, EventArgs e)
+        {
+            DisplayAlert("Info", "Testowy przycisk działa.", "OK");
+        }
     }
 }
