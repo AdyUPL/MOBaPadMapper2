@@ -1,5 +1,6 @@
-Plan działania – MOBaPadMapper2
-1. Cel projektu
+**Plan działania – MOBaPadMapper2**
+
+**1. Cel projektu**
 
 Aplikacja MOBaPadMapper2 ma umożliwić granie w gry mobilne (szczególnie MOBA) przy użyciu gamepada, poprzez:
 
