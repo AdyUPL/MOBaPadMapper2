@@ -1,66 +1,44 @@
-﻿using Microsoft.Maui.Devices;
-using System;
+﻿using System;
+using Microsoft.Maui.Dispatching;
 
-namespace MOBaPadMapper2
+namespace MOBaPadMapper2;
+
+public partial class MainPage : ContentPage
 {
-    public partial class MainPage : ContentPage
+    private readonly IGamepadInputService _gamepad;
+    private readonly MobaInputMapper _mapper;
+
+    public MainPage(IGamepadInputService gamepad, MobaInputMapper mapper)
     {
-        private readonly IGamepadInputService _gamepad;
-        private readonly MobaInputMapper _mapper;
+        InitializeComponent();
 
-        public MainPage(IGamepadInputService gamepad, MobaInputMapper mapper)
+        _gamepad = gamepad;
+        _mapper = mapper;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _gamepad.ButtonChanged += OnGamepadButtonChanged;
+    }
+
+    protected override void OnDisappearing()
+    {
+        _gamepad.ButtonChanged -= OnGamepadButtonChanged;
+        base.OnDisappearing();
+    }
+
+    private void OnGamepadButtonChanged(object? sender, GamepadButtonEventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
         {
-            InitializeComponent();
+            GamepadStatusLabel.Text =
+                $"Przycisk: {e.Button}  Stan: {(e.IsPressed ? "Down" : "Up")}";
+        });
+    }
 
-            _gamepad = gamepad;
-            _mapper = mapper;
-
-            // Na start – jeden domyślny profil
-            ActiveProfileLabel.Text = "Domyślny profil";
-
-            _gamepad.GamepadUpdated += OnGamepadUpdated;
-        }
-
-        private async void ConfigureButton_Clicked(object sender, EventArgs e)
-        {
-            // TODO: tutaj później nawigacja do ekranu konfiguracji (TestPage)
-            await DisplayAlert("Konfiguracja",
-                "Ekran konfiguracji przycisków dodamy w kolejnym kroku.",
-                "OK");
-        }
-
-        protected override void OnDisappearing()
-        {
-            base.OnDisappearing();
-            _gamepad.GamepadUpdated -= OnGamepadUpdated;
-        }
-
-        private async void OnGamepadUpdated(object? sender, GamepadState state)
-        {
-            double width = Width;
-            double height = Height;
-
-            if (width <= 0 || height <= 0)
-            {
-                var info = DeviceDisplay.Current.MainDisplayInfo;
-                width = info.Width / info.Density;
-                height = info.Height / info.Density;
-            }
-
-            await _mapper.OnGamepadStateChanged(state, width, height);
-        }
-        private void OnGamepadButtonChanged(object? sender, GamepadButtonEventArgs e)
-        {
-            // Tu tylko wizualny test
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                GamepadStatusLabel.Text = $"Przycisk: {e.Button}  Stan: {(e.IsPressed ? "Down" : "Up")}";
-            });
-        }
-
-        private void OnTestButtonClicked(object sender, EventArgs e)
-        {
-            DisplayAlert("Info", "Testowy przycisk działa.", "OK");
-        }
+    private void OnTestButtonClicked(object sender, EventArgs e)
+    {
+        DisplayAlert("Info", "Testowy przycisk działa.", "OK");
     }
 }

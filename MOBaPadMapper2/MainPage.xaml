@@ -27,7 +27,7 @@
 
         <!-- Przycisk konfiguracji -->
         <Button Text="Konfiguracja przycisków"
-                Clicked="ConfigureButton_Clicked" />
+                />
 
         <Label Text="Podłącz gamepad i używaj przycisków wg aktualnego profilu."
                TextColor="LightGray"

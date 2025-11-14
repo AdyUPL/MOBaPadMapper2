@@ -6,6 +6,7 @@ public class AndroidTouchInjector : ITouchInjector
     {
         var service = TouchAccessibilityService.Instance;
         if (service == null) return;
+
         await service.PerformTapAsync((float)x, (float)y);
     }
 
@@ -13,6 +14,12 @@ public class AndroidTouchInjector : ITouchInjector
     {
         var service = TouchAccessibilityService.Instance;
         if (service == null) return;
-        await service.PerformSwipeAsync((float)startX, (float)startY, (float)endX, (float)endY, (long)duration.TotalMilliseconds);
+
+        await service.PerformSwipeAsync(
+            (float)startX,
+            (float)startY,
+            (float)endX,
+            (float)endY,
+            (long)duration.TotalMilliseconds);
     }
 }

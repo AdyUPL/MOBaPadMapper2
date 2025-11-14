@@ -1,5 +1,6 @@
 ﻿using Android.App;
 using Android.Content.PM;
+using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Microsoft.Maui;
@@ -13,21 +14,26 @@ namespace MOBaPadMapper2;
                            ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
 public class MainActivity : MauiAppCompatActivity
 {
+    protected override void OnCreate(Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+    }
+
     public override bool OnKeyDown([GeneratedEnum] Keycode keyCode, KeyEvent e)
     {
-        GamepadInputService.Instance?.OnKeyDown(keyCode, e);
+        GamepadInputService.Instance.OnKeyDown(keyCode, e);
         return base.OnKeyDown(keyCode, e);
     }
 
     public override bool OnKeyUp([GeneratedEnum] Keycode keyCode, KeyEvent e)
     {
-        GamepadInputService.Instance?.OnKeyUp(keyCode, e);
+        GamepadInputService.Instance.OnKeyUp(keyCode, e);
         return base.OnKeyUp(keyCode, e);
     }
 
     public override bool OnGenericMotionEvent(MotionEvent e)
     {
-        GamepadInputService.Instance?.OnGenericMotionEvent(e);
+        GamepadInputService.Instance.OnGenericMotionEvent(e);
         return base.OnGenericMotionEvent(e);
     }
 }

@@ -1,3 +1,5 @@
+using System;
+
 namespace MOBaPadMapper2;
 
 public interface ITouchInjector
@@ -8,5 +10,6 @@ public interface ITouchInjector
 
 public interface IGamepadInputService
 {
-    event EventHandler<GamepadState> GamepadUpdated;
+    // Prosty event: jaki przycisk, czy wciœniêty / puszczony
+    event EventHandler<GamepadButtonEventArgs>? ButtonChanged;
 }

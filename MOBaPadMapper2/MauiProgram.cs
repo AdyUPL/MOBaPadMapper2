@@ -1,33 +1,38 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace MOBaPadMapper2
+namespace MOBaPadMapper2;
+
+public static class MauiProgram
 {
-    public static class MauiProgram
+    public static MauiApp CreateMauiApp()
     {
-        public static MauiApp CreateMauiApp()
-        {
-            var builder = MauiApp.CreateBuilder();
-            builder
-                .UseMauiApp<App>()
-                .ConfigureFonts(fonts =>
-                {
-                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-                });
+        var builder = MauiApp.CreateBuilder();
 
-            // SERWISY
-            builder.Services.AddSingleton<ITouchInjector, AndroidTouchInjector>();
-            builder.Services.AddSingleton<IGamepadInputService>(_ => GamepadInputService.Instance);
-            builder.Services.AddSingleton<MobaInputMapper>();
+        builder
+            .UseMauiApp<App>()
+            .ConfigureFonts(fonts =>
+            {
+                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+            });
 
-            // STRONY
-            builder.Services.AddSingleton<MainPage>();
-
-#if DEBUG
-            builder.Logging.AddDebug();
+#if ANDROID
+        builder.Services.AddSingleton<ITouchInjector, AndroidTouchInjector>();
 #endif
 
-            return builder.Build();
-        }
+        // Gamepad
+        builder.Services.AddSingleton<IGamepadInputService>(_ => GamepadInputService.Instance);
+
+        // Mapper (na razie prosty, ale potrzebny do DI)
+        builder.Services.AddSingleton<MobaInputMapper>();
+
+        // Strony
+        builder.Services.AddSingleton<MainPage>();
+
+#if DEBUG
+        builder.Logging.AddDebug();
+#endif
+
+        return builder.Build();
     }
 }
