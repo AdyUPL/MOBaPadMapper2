@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MOBaPadMapper2.ConfigPage"
+             BackgroundColor="#222222"
+             Title="Konfiguracja przycisków">
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Pasek tytułu/profilu -->
+        <StackLayout Padding="16" Spacing="8">
+            <Label x:Name="ProfileNameLabel"
+                   Text="Profil"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   TextColor="White" />
+
+            <Label Text="Przeciągaj kółka, aby ustawić pozycje przycisków."
+                   FontSize="12"
+                   TextColor="LightGray" />
+        </StackLayout>
+
+        <!-- Główny obszar konfiguracji -->
+        <Grid Grid.Row="1" Padding="10">
+            <!-- „Ekran gry” -->
+            <Frame CornerRadius="12"
+                   BackgroundColor="#111111"
+                   BorderColor="#444444"
+                   HasShadow="True">
+                <AbsoluteLayout x:Name="Canvas"
+                                BackgroundColor="#111111" />
+            </Frame>
+        </Grid>
+    </Grid>
+</ContentPage>

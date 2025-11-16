@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Dispatching;
 
@@ -9,6 +10,9 @@ namespace MOBaPadMapper2
         private readonly IGamepadInputService _gamepad;
         private readonly MobaInputMapper _mapper;
 
+        private List<GameProfile> _profiles = new();
+        private GameProfile? _activeProfile;
+
         public MainPage(IGamepadInputService gamepad, MobaInputMapper mapper)
         {
             InitializeComponent();
@@ -16,13 +20,27 @@ namespace MOBaPadMapper2
             _gamepad = gamepad;
             _mapper = mapper;
 
-            // Ustaw tekst początkowy profilu
-            ActiveProfileLabel.Text = "Domyślny profil";
+            // 1️⃣ Wczytanie profili
+            _profiles = ProfilesRepository.LoadProfiles();
 
-            // Tymczasowe profile – później podłączymy ProfilesRepository
-            ProfilesPicker.Items.Add("Domyślny profil");
-            ProfilesPicker.Items.Add("Profil 2");
-            ProfilesPicker.SelectedIndex = 0;
+            ProfilesPicker.Items.Clear();
+            foreach (var p in _profiles)
+            {
+                ProfilesPicker.Items.Add(p.Name);
+            }
+
+            // 2️⃣ Ustaw domyślny profil
+            if (_profiles.Count > 0)
+            {
+                _activeProfile = _profiles[0];
+                ProfilesPicker.SelectedIndex = 0;
+                ActiveProfileLabel.Text = _profiles[0].Name;
+                _mapper.SetProfile(_profiles[0]);
+            }
+            else
+            {
+                ActiveProfileLabel.Text = "Brak profili";
+            }
         }
 
         protected override void OnAppearing()
@@ -39,14 +57,14 @@ namespace MOBaPadMapper2
 
         private void OnGamepadButtonChanged(object? sender, GamepadButtonEventArgs e)
         {
-            // Informacja diagnostyczna na ekranie
+            // Info diagnostyczne na ekranie
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 GamepadStatusLabel.Text =
                     $"Przycisk: {e.Button}  Stan: {(e.IsPressed ? "Down" : "Up")}";
             });
 
-            // Faktyczne mapowanie przycisku na dotyk
+            // Mapowanie przycisku na dotyk według aktywnego profilu
             _ = _mapper.HandleButtonChangedAsync(e);
         }
 
@@ -55,17 +73,26 @@ namespace MOBaPadMapper2
             await DisplayAlert("Info", "Testowy przycisk działa.", "OK");
         }
 
-        // 🔹 HANDLER dla SelectedIndexChanged w Pickerze
         private void OnProfileChanged(object sender, EventArgs e)
         {
-            if (ProfilesPicker.SelectedIndex < 0)
+            if (ProfilesPicker.SelectedIndex < 0 || ProfilesPicker.SelectedIndex >= _profiles.Count)
                 return;
 
-            var selectedName = ProfilesPicker.Items[ProfilesPicker.SelectedIndex];
-            ActiveProfileLabel.Text = selectedName;
+            var profile = _profiles[ProfilesPicker.SelectedIndex];
 
-            // Tu później podłączymy konkretne profile:
-            // np. wczytanie z ProfilesRepository + _mapper.SetProfile(profile);
+            _activeProfile = profile;
+            ActiveProfileLabel.Text = profile.Name;
+            _mapper.SetProfile(profile);
+        }
+
+        // 🔹 Wejście do ekranu konfiguracji
+        private async void ConfigureButton_Clicked(object sender, EventArgs e)
+        {
+            if (_activeProfile == null)
+                return;
+
+            // Przejście do strony konfiguracji
+            await Navigation.PushAsync(new ConfigPage(_activeProfile, _mapper));
         }
     }
 }

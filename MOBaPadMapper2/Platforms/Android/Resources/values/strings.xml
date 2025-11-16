@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+	<string name="app_name">MobaPad Mapper</string>
+
+	<string name="accessibility_service_description">
+		Umożliwia aplikacji MobaPad wykonywanie wirtualnych tapnięć i gestów w grach.
+	</string>
+</resources>

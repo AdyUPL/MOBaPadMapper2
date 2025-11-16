@@ -1,25 +1,36 @@
 ﻿#if ANDROID
 using Android.AccessibilityServices;
+using Android.App;
+using Android.Content;
 using Android.Graphics;
-using Android.Views.Accessibility;
 using Android.Views;
+using Android.Views.Accessibility;
 using System.Threading.Tasks;
 
 namespace MOBaPadMapper2;
 
+// MUSI być Service + IntentFilter + MetaData
+[Service(
+    Exported = true,
+    Permission = "android.permission.BIND_ACCESSIBILITY_SERVICE",
+    Label = "MobaPad Touch Service"
+)]
+[IntentFilter(new[] { "android.accessibilityservice.AccessibilityService" })]
+[MetaData("android.accessibilityservice", Resource = "@xml/mobapad_accessibility_config")]
 public class TouchAccessibilityService : AccessibilityService
 {
     public static TouchAccessibilityService? Instance { get; private set; }
 
-    public override void OnCreate()
-    {
-        base.OnCreate();
-    }
-
+    // ⭐️ KLUCZ: poprawny modyfikator dostępu – "protected", NIE "public"
     protected override void OnServiceConnected()
     {
         base.OnServiceConnected();
         Instance = this;
+
+        // Debug – zobaczysz to raz, gdy system połączy usługę
+        Android.Widget.Toast
+            .MakeText(global::Android.App.Application.Context, "Touch service CONNECTED", Android.Widget.ToastLength.Short)?
+            .Show();
     }
 
     public override void OnDestroy()
@@ -32,17 +43,19 @@ public class TouchAccessibilityService : AccessibilityService
 
     public override void OnAccessibilityEvent(AccessibilityEvent e)
     {
-        // Nie potrzebujemy tu niczego
+        // Nie obsługujemy eventów – tylko wysyłamy gesty
     }
 
     public override void OnInterrupt()
     {
-        // Ignorujemy
+        // Nic
     }
 
     public Task PerformTapAsync(float x, float y)
     {
-        var path = new Android.Graphics.Path();
+        var path = new global::Android.Graphics.Path();
+
+
         path.MoveTo(x, y);
 
         var stroke = new GestureDescription.StrokeDescription(path, 0, 50);
@@ -55,7 +68,8 @@ public class TouchAccessibilityService : AccessibilityService
 
     public Task PerformSwipeAsync(float startX, float startY, float endX, float endY, long durationMs)
     {
-        var path = new Android.Graphics.Path();
+        var path = new global::Android.Graphics.Path();
+
         path.MoveTo(startX, startY);
         path.LineTo(endX, endY);
 
