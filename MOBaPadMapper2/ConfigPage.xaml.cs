@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
-using Microsoft.Maui.Layouts;
-using Rect = Microsoft.Maui.Graphics.Rect;
+using Microsoft.Maui.Dispatching;
 
 namespace MOBaPadMapper2;
 
@@ -9,148 +10,50 @@ public partial class ConfigPage : ContentPage
 {
     private readonly GameProfile _profile;
     private readonly MobaInputMapper _mapper;
+    private readonly IGamepadInputService _gamepad;
 
-    public ConfigPage(GameProfile profile, MobaInputMapper mapper)
+    public ConfigPage(GameProfile profile, MobaInputMapper mapper, IGamepadInputService gamepad)
     {
         InitializeComponent();
 
         _profile = profile;
         _mapper = mapper;
+        _gamepad = gamepad;
 
         ProfileNameLabel.Text = $"Konfiguracja: {_profile.Name}";
+        DebugLabel.Text = $"Mappings: {_profile.Mappings.Count}";
 
+        // Podpinamy listę
+        MappingsList.ItemsSource = _profile.Mappings;
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
-
-        // Jeśli Canvas ma już rozmiar – rysujemy od razu
-        if (Canvas.Width > 0 && Canvas.Height > 0)
-        {
-            RenderButtons();
-        }
-        else
-        {
-            // W przeciwnym razie – rysujemy przy pierwszej zmianie rozmiaru,
-            // i od razu wypisujemy liczbę mapowań dla debugowania
-            Canvas.SizeChanged += CanvasOnSizeChangedOnce;
-        }
+        _gamepad.ButtonChanged += OnGamepadButtonChanged;
     }
 
-    private void CanvasOnSizeChangedOnce(object? sender, EventArgs e)
+    protected override void OnDisappearing()
     {
-        Canvas.SizeChanged -= CanvasOnSizeChangedOnce;
-        RenderButtons();
+        _gamepad.ButtonChanged -= OnGamepadButtonChanged;
+        base.OnDisappearing();
     }
 
-    private void RenderButtons()
+    // Podświetlanie kafelka dla wciśniętego przycisku pada
+    private void OnGamepadButtonChanged(object? sender, GamepadButtonEventArgs e)
     {
-        Canvas.Children.Clear();
-
-        if (Canvas.Width <= 0 || Canvas.Height <= 0)
+        if (!e.IsPressed)
             return;
 
-        if (_profile.Mappings.Count == 0)
-        {
-            var info = new Label
-            {
-                Text = "Brak mapowań w profilu",
-                TextColor = Colors.LightGray,
-                HorizontalOptions = LayoutOptions.Center,
-                VerticalOptions = LayoutOptions.Center
-            };
-            Canvas.Children.Add(info);
-            AbsoluteLayout.SetLayoutBounds(info, new Rect(0, 0, Canvas.Width, Canvas.Height));
-            AbsoluteLayout.SetLayoutFlags(info, AbsoluteLayoutFlags.None);
+        var mapping = _profile.Mappings.FirstOrDefault(m => m.Matches(e));
+        if (mapping == null)
             return;
-        }
 
-        foreach (var mapping in _profile.Mappings)
+        // Na razie tylko info tekstowe – bez szukania konkretnych kontrolek
+        MainThread.BeginInvokeOnMainThread(() =>
         {
-            var label = mapping.TriggerButton?.ToString() ?? "?";
-
-            var size = mapping.Size > 0 ? mapping.Size : 60;
-            var radius = size / 2;
-
-            var button = new Button
-            {
-                Text = label,
-                WidthRequest = size,
-                HeightRequest = size,
-                CornerRadius = (int)radius,
-                BackgroundColor = Colors.DarkOrange,
-                TextColor = Colors.Black,
-                FontAttributes = FontAttributes.Bold,
-            };
-
-            button.BindingContext = mapping;
-
-            // 👉 Normalizacja współrzędnych na zakres [0..1]
-            mapping.TargetX = Math.Clamp(mapping.TargetX, 0.0, 1.0);
-            mapping.TargetY = Math.Clamp(mapping.TargetY, 0.0, 1.0);
-
-            // Wyliczamy środek
-            var centerX = mapping.TargetX * Canvas.Width;
-            var centerY = mapping.TargetY * Canvas.Height;
-
-            // Margines, żeby kółko nie wyszło poza ekran
-            var minX = radius;
-            var maxX = Canvas.Width - radius;
-            var minY = radius;
-            var maxY = Canvas.Height - radius;
-
-            centerX = Math.Clamp(centerX, minX, maxX);
-            centerY = Math.Clamp(centerY, minY, maxY);
-
-            var x = centerX - radius;
-            var y = centerY - radius;
-
-            AbsoluteLayout.SetLayoutBounds(button, new Rect(x, y, size, size));
-            AbsoluteLayout.SetLayoutFlags(button, AbsoluteLayoutFlags.None);
-
-            // Gest przeciągania
-            var pan = new PanGestureRecognizer();
-            double startX = 0, startY = 0;
-
-            pan.PanUpdated += (s, e) =>
-            {
-                if (e.StatusType == GestureStatus.Started)
-                {
-                    var bounds = AbsoluteLayout.GetLayoutBounds(button);
-                    startX = bounds.X;
-                    startY = bounds.Y;
-                }
-                else if (e.StatusType == GestureStatus.Running)
-                {
-                    var newX = startX + e.TotalX;
-                    var newY = startY + e.TotalY;
-
-                    // Też przycinamy, żeby nie dało się wypchnąć kółka poza Canvas
-                    var clampedCenterX = Math.Clamp(newX + radius, minX, maxX);
-                    var clampedCenterY = Math.Clamp(newY + radius, minY, maxY);
-
-                    newX = clampedCenterX - radius;
-                    newY = clampedCenterY - radius;
-
-                    AbsoluteLayout.SetLayoutBounds(button, new Rect(newX, newY, size, size));
-                }
-                else if (e.StatusType == GestureStatus.Completed)
-                {
-                    var bounds = AbsoluteLayout.GetLayoutBounds(button);
-                    var newCenterX = bounds.X + bounds.Width / 2;
-                    var newCenterY = bounds.Y + bounds.Height / 2;
-
-                    mapping.TargetX = newCenterX / Canvas.Width;
-                    mapping.TargetY = newCenterY / Canvas.Height;
-
-                    _mapper.SetProfile(_profile);
-                }
-            };
-
-            button.GestureRecognizers.Add(pan);
-
-            Canvas.Children.Add(button);
-        }
+            DebugLabel.Text = $"Mappings: {_profile.Mappings.Count} | Last: {mapping.TriggerButton} ({e.Button})";
+        });
     }
+
 }

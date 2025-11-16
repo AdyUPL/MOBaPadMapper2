@@ -91,8 +91,8 @@ namespace MOBaPadMapper2
             if (_activeProfile == null)
                 return;
 
-            // Przejście do strony konfiguracji
-            await Navigation.PushAsync(new ConfigPage(_activeProfile, _mapper));
+            await Navigation.PushAsync(new ConfigPage(_activeProfile, _mapper, _gamepad));
         }
+
     }
 }

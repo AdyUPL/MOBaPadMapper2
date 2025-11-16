@@ -5,30 +5,69 @@
              BackgroundColor="#222222"
              Title="Konfiguracja przycisków">
 
-    <Grid RowDefinitions="Auto,*">
-        <!-- Pasek tytułu/profilu -->
-        <StackLayout Padding="16" Spacing="8">
-            <Label x:Name="ProfileNameLabel"
-                   Text="Profil"
-                   FontSize="20"
-                   FontAttributes="Bold"
-                   TextColor="White" />
+    <VerticalStackLayout Padding="16" Spacing="12">
 
-            <Label Text="Przeciągaj kółka, aby ustawić pozycje przycisków."
-                   FontSize="12"
-                   TextColor="LightGray" />
-        </StackLayout>
+        <Label x:Name="ProfileNameLabel"
+               Text="Profil"
+               FontSize="20"
+               FontAttributes="Bold"
+               TextColor="White" />
 
-        <!-- Główny obszar konfiguracji -->
-        <Grid Grid.Row="1" Padding="10">
-            <!-- „Ekran gry” -->
-            <Frame CornerRadius="12"
-                   BackgroundColor="#111111"
-                   BorderColor="#444444"
-                   HasShadow="True">
-                <AbsoluteLayout x:Name="Canvas"
-                                BackgroundColor="#111111" />
-            </Frame>
-        </Grid>
-    </Grid>
+        <Label Text="Lista mapowań profilu. Każdy kafelek odpowiada jednemu przyciskowi na padzie."
+               FontSize="12"
+               TextColor="LightGray" />
+
+        <!-- Debug o liczbie mapowań -->
+        <Label x:Name="DebugLabel"
+               FontSize="10"
+               TextColor="LightGray" />
+
+        <!-- Lista przycisków profilu -->
+        <CollectionView x:Name="MappingsList"
+                        SelectionMode="None">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical"
+                                 Span="2" />
+            </CollectionView.ItemsLayout>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Padding="8"
+                           Margin="4"
+                           CornerRadius="12"
+                           BackgroundColor="#333333">
+                        <VerticalStackLayout Spacing="4">
+
+                            <!-- Główne kółko / przycisk -->
+                            <Button x:Name="MappingButton"
+                                    WidthRequest="60"
+                                    HeightRequest="60"
+                                    CornerRadius="30"
+                                    BackgroundColor="DarkOrange"
+                                    TextColor="Black"
+                                    FontAttributes="Bold"
+                                    Text="{Binding TriggerButton}" />
+
+                            <!-- Szczegóły mapowania -->
+                            <Label FontSize="10"
+                                   TextColor="LightGray">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="Akcja: " />
+                                        <Span Text="{Binding ActionType}" />
+                                        <Span Text=" | X=" />
+                                        <Span Text="{Binding TargetX, StringFormat='{}{0:F2}'}" />
+                                        <Span Text=" Y=" />
+                                        <Span Text="{Binding TargetY, StringFormat='{}{0:F2}'}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </VerticalStackLayout>
 </ContentPage>

@@ -42,16 +42,34 @@ public class ActionMapping
     public double? EndY { get; set; }
     public TimeSpan Duration { get; set; } = TimeSpan.FromMilliseconds(100);
 
+    //public bool Matches(GamepadButtonEventArgs e)
+    //{
+    //    if (!string.IsNullOrEmpty(ButtonCode) &&
+    //        ButtonCode.Equals(e.Button, StringComparison.OrdinalIgnoreCase))
+    //        return true;
+
+    //    if (TriggerButton.HasValue &&
+    //        e.Button.Equals(TriggerButton.Value.ToString(), StringComparison.OrdinalIgnoreCase))
+    //        return true;
+
+    //    return false;
+    //}
     public bool Matches(GamepadButtonEventArgs e)
     {
+        var buttonStr = (e.Button ?? "").ToLowerInvariant();
+
         if (!string.IsNullOrEmpty(ButtonCode) &&
-            ButtonCode.Equals(e.Button, StringComparison.OrdinalIgnoreCase))
+            buttonStr.Contains(ButtonCode.ToLowerInvariant()))
             return true;
 
-        if (TriggerButton.HasValue &&
-            e.Button.Equals(TriggerButton.Value.ToString(), StringComparison.OrdinalIgnoreCase))
-            return true;
+        if (TriggerButton.HasValue)
+        {
+            var name = TriggerButton.Value.ToString().ToLowerInvariant(); // np. "A" -> "a"
+            if (buttonStr == name || buttonStr.EndsWith(name))
+                return true;
+        }
 
         return false;
     }
+
 }
